@@ -1,0 +1,223 @@
+#include "uart.h"
+#include "draw_graphics.h"
+#include "printf.h"
+#include "malloc.h"
+#include "strings.h"
+#include "gl.h"
+#include "console.h"
+#include "fb.h"
+#include "strings.h"
+#include "timer.h"
+#include "gpio.h"
+#include "uart.h"
+#include "console.h"
+#include "ringbuffer2d.h"
+#include "hstimer.h"
+#include "interrupts.h"
+#include "gpio_interrupt.h"
+#include "beat_map.h"
+
+static void left_right_arrow_test(void) {
+    // create array of arrows
+    arrow_state** arrow_list = (struct arrow_state**)malloc(4 * sizeof(struct arrow_state*)); 
+
+    arrow_state* right_arrow = gl_make_new_arrow(LEFT_ARROW, GL_MAGENTA);
+    gl_draw_arrow(right_arrow);
+    arrow_state* left_arrow = gl_make_new_arrow(LEFT_ARROW,GL_MAGENTA);
+    gl_draw_arrow(left_arrow);
+    arrow_list[0] = right_arrow;
+    timer_delay(10);
+    for (int i = 0; i < 250; i++){
+      scroll_screen(arrow_list);
+    }
+
+    arrow_list[1] = left_arrow;
+    gl_swap_buffer();
+    pause("Now displaying right and left arrow");
+
+    // scroll!   
+    for (int i = 0; i < 250; i++){
+      scroll_screen(arrow_list);
+    }
+
+    free(arrow_list);
+}
+
+static void arrow_multiple_test(void) {
+  // create array of arrows
+    arrow_state** arrow_list = (struct arrow_state**)malloc(75 * sizeof(struct arrow_state*));
+
+    arrow_state* right_arrow = gl_make_new_arrow(RIGHT_ARROW, GL_MAGENTA);
+    gl_draw_arrow(right_arrow);
+    arrow_state* left_arrow = gl_make_new_arrow(LEFT_ARROW, GL_MAGENTA);
+    gl_draw_arrow(left_arrow);
+    arrow_list[0] = right_arrow;
+    arrow_list[1] = left_arrow;
+    gl_swap_buffer();
+    pause("Now displaying right and left arrow");
+
+    // scroll!   
+    for (int i = 0; i < 100; i++){
+      //printf("count:  %d\n", i);
+      scroll_screen(arrow_list);
+    }
+  
+    // create new right arrow 
+    arrow_state* right_arrow_2 = gl_make_new_arrow(LEFT_ARROW, GL_MAGENTA);
+    gl_draw_arrow(right_arrow_2);
+    arrow_list[2] = right_arrow_2;
+    gl_swap_buffer();
+
+    // scroll!   
+    for (int i = 0; i < 200; i++){
+      //printf("count:  %d\n", i);
+      scroll_screen(arrow_list);
+    }
+
+    // create new left arrow 
+    arrow_state* left_arrow_2 = gl_make_new_arrow(LEFT_ARROW, GL_MAGENTA);
+    gl_draw_arrow(left_arrow_2);
+    arrow_list[3] = left_arrow_2;
+    gl_swap_buffer();
+
+    // scroll!   
+    for (int i = 0; i < 200; i++){
+      //printf("count:  %d\n", i);
+      scroll_screen(arrow_list);
+    }
+
+    // create new right arrow 
+    arrow_state* right_arrow_3 = gl_make_new_arrow(LEFT_ARROW, GL_MAGENTA);
+    gl_draw_arrow(right_arrow_3);
+    arrow_list[4] = right_arrow_3;
+    gl_swap_buffer();
+
+    // scroll!   
+    for (int i = 0; i < 250; i++){
+      //printf("count:  %d\n", i);
+      scroll_screen(arrow_list);
+    }
+
+    arrow_state* down_arrow = gl_make_new_arrow(LEFT_ARROW, GL_MAGENTA);
+    gl_draw_arrow(down_arrow);
+    arrow_list[5] = down_arrow;
+    gl_swap_buffer();
+
+    for(int i = 0; i < 250 ; i++) {
+      scroll_screen(arrow_list);
+    }
+
+    free(arrow_list);
+    pause("scrolled!");
+}
+
+static void up_down_arrow_test(void) {
+    // create array of arrows
+    //arrow_state** arrow_list = (struct arrow_state**)malloc(4 * sizeof(struct arrow_state*));
+    arrow_state* up_arrow = gl_make_new_arrow(UP_ARROW, GL_PURPLE);
+    gl_draw_arrow(up_arrow);
+    
+    arrow_state* down_arrow = gl_make_new_arrow(DOWN_ARROW, GL_PURPLE);
+    gl_draw_arrow(down_arrow);
+    /*arrow_list[0] = up_arrow;
+    arrow_list[1] = down_arrow; */
+    gl_swap_buffer();
+    pause("Now displaying up arrow");
+
+    // scroll
+    /*
+    for (int i = 0; i < 950; i++) {
+      printf("count:  %d\n", i);
+      scroll_screen(arrow_list);
+    }
+    */
+    //free(arrow_list);
+    free(up_arrow);
+    pause("look");
+}
+
+static void all_arrow_scroll_test(void) {
+    // create array of arrows
+    arrow_state** arrow_list = (struct arrow_state**)malloc(4 * sizeof(struct arrow_state*));
+    arrow_state* right_arrow = gl_make_new_arrow(RIGHT_ARROW, GL_MAGENTA);
+    gl_draw_arrow(right_arrow);
+    arrow_state* left_arrow = gl_make_new_arrow(LEFT_ARROW, GL_MAGENTA);
+    gl_draw_arrow(left_arrow);
+    arrow_state* up_arrow = gl_make_new_arrow(UP_ARROW, GL_MAGENTA);
+    gl_draw_arrow(up_arrow);
+    arrow_state* down_arrow = gl_make_new_arrow(DOWN_ARROW, GL_MAGENTA);
+    gl_draw_arrow(down_arrow);
+    arrow_list[0] = right_arrow;
+    arrow_list[1] = left_arrow;
+    arrow_list[2] = up_arrow;
+    arrow_list[3] = down_arrow; 
+    gl_swap_buffer();
+    pause("pls pause");
+    
+    for (int i = 0; i < 450; i++) {
+      scroll_screen(arrow_list);
+      printf("%d\n", i);
+    }
+    pause("displaying all arrows");
+}
+
+static void all_arrow_test(void) {
+    // create array of arrows
+    arrow_state** arrow_list = (struct arrow_state**)malloc(4 * sizeof(struct arrow_state*));
+    arrow_state* right_arrow = gl_make_new_arrow(RIGHT_ARROW,GL_MAGENTA);
+    gl_draw_arrow(right_arrow);
+    arrow_state* left_arrow = gl_make_new_arrow(LEFT_ARROW,GL_MAGENTA);
+    gl_draw_arrow(left_arrow);
+    arrow_state* up_arrow = gl_make_new_arrow(UP_ARROW,GL_MAGENTA);
+    gl_draw_arrow(up_arrow);
+    arrow_state* down_arrow = gl_make_new_arrow(DOWN_ARROW, GL_MAGENTA);
+    gl_draw_arrow(down_arrow);
+    arrow_list[0] = right_arrow;
+    arrow_list[1] = left_arrow;
+    arrow_list[2] = up_arrow;
+    arrow_list[3] = down_arrow;
+    gl_swap_buffer();
+
+    pause("pls pause");
+
+    for (int i = 0; i < 450; i++) {
+      scroll_screen(arrow_list);
+    }
+
+    pause("white arrow?");
+
+}
+
+static void score_test(void) {
+    arrow_state** arrow_list = (struct arrow_state**)malloc(5 * sizeof(struct arrow_state*));
+    arrow_state* left_arrow = gl_make_new_arrow(DOWN_ARROW,GL_MAGENTA);
+    gl_draw_arrow(left_arrow);
+    gl_swap_buffer();
+    arrow_list[0] = left_arrow;
+    pause("wow");
+    for (int i = 0; i < 200; i++) {
+      scroll_screen(arrow_list);
+    }
+   
+    arrow_state* left_arrow_2 = gl_make_new_arrow(DOWN_ARROW,GL_MAGENTA);
+    gl_draw_arrow(left_arrow_2);
+    arrow_list[1] = left_arrow_2;
+    gl_swap_buffer();
+    for (int i = 0; i < 200; i++) {
+      scroll_screen(arrow_list);
+    }
+    
+    arrow_state* right_arrow = gl_make_new_arrow(DOWN_ARROW,GL_MAGENTA);
+    gl_draw_arrow(right_arrow);
+    arrow_list[2] = right_arrow;
+    for (int i = 0; i < 50; i++) {
+      scroll_screen(arrow_list);
+    }
+
+    arrow_state* right_arrow_2 = gl_make_new_arrow(DOWN_ARROW,GL_MAGENTA);
+    gl_draw_arrow(right_arrow_2);
+    arrow_list[3] = right_arrow_2;
+    for (int i = 0; i < 200; i++) {
+      scroll_screen(arrow_list);
+    }    
+}
